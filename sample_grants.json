@@ -1,0 +1,27 @@
+// Copy this file to ./grants.json, input your own data and delete these comments.
+//
+//     shares - The number of shares in your grant.
+//     commencement_date - The vesting commencement date of your grant in ISO-8601 format e.g. 1999-12-31.
+//     vesting_schedule_in_years - The vesting schedule of your grant.  The default is 4 years.
+//     monthly - Set to true if you vest more every month.  The default is quarterly (March, June, September, December).
+//     strike_price - The strike price for ISOs.  Do not use for RSUs.
+//     number_purchased - If you have purchased ISOs from this grant, enter the number here.
+//
+// All grants are assumed to have a one year cliff.
+
+[{
+    "shares": 12,
+    "commencement_date": "2014-09-15",
+    "strike_price": 5.50,
+    "monthly": true,
+    "number_purchased": 5
+},
+{
+    "shares": 34,
+    "commencement_date": "2015-06-15"
+},
+{
+    "shares": 56,
+    "commencement_date": "2016-03-15",
+    "vesting_schedule_in_years": 3
+}]
