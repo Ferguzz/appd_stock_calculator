@@ -19,21 +19,30 @@ if __name__ == '__main__':
         try:
             grants = json.load(f)
         except ValueError as e:
-            print('There was a fomattting error in your \'grants.json\': %s.  Please correct it and try again.' % e)
+            print('ERROR: There was a fomattting error in your \'grants.json\': %s.  Please correct it and try again.'
+                  % e)
             sys.exit(1)
 
-    net_value = 0.
-    cost = 0.
+    total_shares = 0
+    total_vested = 0
+    total_net_value = 0.
+    total_cost = 0.
+
     for grant in grants:
         try:
             award = StockAward(**grant)
         except TypeError as e:
-            print('There was an unexpected value in your \'grants.json\': %s.  Please correct it and try again.'
+            print('ERROR: There was an unexpected value in your \'grants.json\': %s.  Please correct it and try again.'
                   % str(e).split('unexpected keyword argument ')[1])
             sys.exit(1)
-        cost += award.cost_to_purchase(date)
-        net_value += award.net_value(price, date)
+
+        total_shares += award.shares
+        total_vested += award.number_vested(date)
+        total_cost += award.cost_to_purchase(date)
+        total_net_value += award.net_value(price, date)
 
     print('Based on a stock price of $%.2f on %s...' % (price, date))
-    print('total cost to purchase: $%.2f' % cost)
-    print('total net value (pre-tax): $%.2f' % net_value)
+    print(' - %d/%d shares vested' % (total_vested, total_shares))
+    if total_cost:
+        print(' - cost to purchase available RSUs: $%.2f' % total_cost)
+    print(' - total net value of all awards (pre-tax): $%.2f' % total_net_value)

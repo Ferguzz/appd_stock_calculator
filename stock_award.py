@@ -13,6 +13,7 @@ class StockAward(object):
         self.number_purchased = number_purchased
         assert one_year_cliff
         self.first_vesting_date = self.commencement_date.replace(year=self.commencement_date.year + 1)
+        self.number_vested_cache = {}
 
     def cost_to_purchase(self, date):
         return (self.number_vested(date) - self.number_purchased) * self.strike_price
@@ -21,10 +22,9 @@ class StockAward(object):
         return self.number_vested(date) * price
 
     def net_value(self, price, date):
-        number_vested = self.number_vested(date)
-        return (number_vested * price) - (number_vested * self.strike_price)
+        return (self.number_vested(date) * price) - (self.number_vested(date) * self.strike_price)
 
-    def number_vested(self, date):
+    def last_vesting_date(self, date):
         # If we haven't hit the requisite day of the month yet, go back a month.
         if date.day < self.commencement_date.day:
             date = dateutils.add_months(date, -1)
@@ -42,10 +42,21 @@ class StockAward(object):
             date = date.replace(day=self.commencement_date.day)
         except ValueError:  # day is out of range for month
             date = date.replace(day=calendar.monthrange(date.year, date.month)[1])
+        return date
 
-        # Awards which haven't reached their cliff are worthless.
-        if date < self.first_vesting_date:
-            return 0
+    def number_vested(self, date):
+        try:
+            return self.number_vested_cache[date]
+        except KeyError:
+            last_vesting_date = self.last_vesting_date(date)
 
-        shares_vesting_per_month = self.shares / float(12 * self.vesting_schedule_in_years)
-        return min(self.shares, int(dateutils.months_between(self.commencement_date, date) * shares_vesting_per_month))
+            # Awards which haven't reached their cliff are worthless.
+            if last_vesting_date < self.first_vesting_date:
+                number_vested = 0
+            else:
+                shares_vesting_per_month = self.shares / float(12 * self.vesting_schedule_in_years)
+                number_vested = min(self.shares, int(dateutils.months_between(
+                    self.commencement_date, last_vesting_date) * shares_vesting_per_month))
+
+            self.number_vested_cache[date] = number_vested
+            return number_vested
