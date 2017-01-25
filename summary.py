@@ -1,9 +1,7 @@
 import argparse
 import datetime
 import dateutils
-import json
-from stock_award import StockAward
-import sys
+import grants
 
 
 if __name__ == '__main__':
@@ -15,27 +13,12 @@ if __name__ == '__main__':
     date = args.date
     price = args.price
 
-    with open('grants.json') as f:
-        try:
-            grants = json.load(f)
-        except ValueError as e:
-            print('ERROR: There was a fomattting error in your \'grants.json\': %s.  Please correct it and try again.'
-                  % e)
-            sys.exit(1)
-
     total_shares = 0
     total_vested = 0
     total_net_value = 0.
     total_cost = 0.
 
-    for grant in grants:
-        try:
-            award = StockAward(**grant)
-        except TypeError as e:
-            print('ERROR: There was an unexpected value in your \'grants.json\': %s.  Please correct it and try again.'
-                  % str(e).split('unexpected keyword argument ')[1])
-            sys.exit(1)
-
+    for award in grants.parse():
         total_shares += award.shares
         total_vested += award.number_vested(date)
         total_cost += award.cost_to_purchase(date)
@@ -44,5 +27,5 @@ if __name__ == '__main__':
     print('Based on a stock price of $%.2f on %s...' % (price, date))
     print(' - %d/%d shares vested' % (total_vested, total_shares))
     if total_cost:
-        print(' - cost to purchase available RSUs: $%.2f' % total_cost)
+        print(' - cost to purchase available options: $%.2f' % total_cost)
     print(' - total net value of all awards (pre-tax): $%.2f' % total_net_value)
